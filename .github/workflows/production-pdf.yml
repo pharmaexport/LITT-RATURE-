@@ -1,0 +1,76 @@
+name: Production PDF horaire
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 * * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  produire:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Installer les dépendances
+        run: pip install -r requirements.txt
+
+      - name: Générer le brief éditorial
+        run: |
+          mkdir -p briefs output/pages output/pdfs
+          python generate_brief.py
+
+      - name: Vérifier les pages illustrées
+        id: pages
+        shell: bash
+        run: |
+          count=$(find output/pages -maxdepth 1 -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) | wc -l)
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+          if [ "$count" -eq 0 ]; then
+            echo "Aucune page illustrée disponible. La génération d’images doit être connectée avant l’assemblage PDF."
+          fi
+
+      - name: Construire le PDF
+        if: steps.pages.outputs.count != '0'
+        run: |
+          stamp=$(date -u +'%Y%m%d_%H%M')
+          pdf="output/pdfs/Regards_au_Levant_${stamp}.pdf"
+          python scripts/build_pdf.py --images-dir output/pages --output "$pdf"
+          echo "PDF_PATH=$pdf" >> "$GITHUB_ENV"
+
+      - name: Envoyer sur Google Drive
+        if: steps.pages.outputs.count != '0'
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
+        run: python scripts/upload_drive.py "$PDF_PATH"
+
+      - name: Archiver le PDF comme artifact GitHub
+        if: steps.pages.outputs.count != '0'
+        uses: actions/upload-artifact@v4
+        with:
+          name: regards-au-levant-pdf
+          path: ${{ env.PDF_PATH }}
+          retention-days: 30
+
+      - name: Enregistrer les nouveaux briefs
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add briefs/
+          if git diff --cached --quiet; then
+            echo 'Aucun nouveau brief à enregistrer.'
+          else
+            git commit -m 'Ajoute le brief éditorial horaire'
+            git push
+          fi
