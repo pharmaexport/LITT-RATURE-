@@ -1,8 +1,6 @@
-name: Brief littéraire horaire
+name: Brief littéraire manuel
 
 on:
-  schedule:
-    - cron: "7 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -32,7 +30,7 @@ jobs:
             echo "Aucun nouveau brief à enregistrer."
             exit 0
           fi
-          git commit -m "Ajouter le brief littéraire horaire"
+          git commit -m "Ajouter le brief littéraire manuel"
           git push
 
       - name: Archiver les briefs du cycle

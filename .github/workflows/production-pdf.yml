@@ -1,9 +1,7 @@
-name: Production PDF horaire
+name: Production PDF manuelle
 
 on:
   workflow_dispatch:
-  schedule:
-    - cron: '17 * * * *'
 
 permissions:
   contents: write
@@ -71,6 +69,6 @@ jobs:
           if git diff --cached --quiet; then
             echo 'Aucun nouveau brief à enregistrer.'
           else
-            git commit -m 'Ajoute le brief éditorial horaire'
+            git commit -m 'Ajoute le brief éditorial manuel'
             git push
           fi
