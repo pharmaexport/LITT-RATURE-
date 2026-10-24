@@ -38,4 +38,4 @@ jobs:
         with:
           name: brief-litteraire-${{ github.run_number }}
           path: briefs/
-          retention-days: 30
+          retention-days: 7
