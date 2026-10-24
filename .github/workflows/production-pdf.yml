@@ -55,7 +55,7 @@ jobs:
 
       - name: Archiver le PDF comme artifact GitHub
         if: steps.pages.outputs.count != '0'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: regards-au-levant-pdf
           path: ${{ env.PDF_PATH }}
