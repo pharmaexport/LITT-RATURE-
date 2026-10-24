@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   generate-brief:
@@ -12,6 +12,8 @@ jobs:
     steps:
       - name: Récupérer le dépôt
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Installer Python
         uses: actions/setup-python@v5
@@ -20,18 +22,6 @@ jobs:
 
       - name: Générer le brief
         run: python scripts/generate_brief.py
-
-      - name: Enregistrer le brief
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add briefs/
-          if git diff --cached --quiet; then
-            echo "Aucun nouveau brief à enregistrer."
-            exit 0
-          fi
-          git commit -m "Ajouter le brief littéraire manuel"
-          git push
 
       - name: Archiver les briefs du cycle
         uses: actions/upload-artifact@v4
