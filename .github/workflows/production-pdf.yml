@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   produire:
@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Récupérer le dépôt
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Installer Python
         uses: actions/setup-python@v5
@@ -59,14 +61,5 @@ jobs:
           path: ${{ env.PDF_PATH }}
           retention-days: 7
 
-      - name: Enregistrer les nouveaux briefs
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add briefs/
-          if git diff --cached --quiet; then
-            echo 'Aucun nouveau brief à enregistrer.'
-          else
-            git commit -m 'Ajoute le brief éditorial manuel'
-            git push
-          fi
+      # Saving briefs by pushing from this job is intentionally disabled.
+      # Retained artifacts can be reviewed and committed from a trusted workstation.
