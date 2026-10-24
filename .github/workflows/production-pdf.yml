@@ -46,12 +46,10 @@ jobs:
           python scripts/build_pdf.py --images-dir output/pages --output "$pdf"
           echo "PDF_PATH=$pdf" >> "$GITHUB_ENV"
 
-      - name: Envoyer sur Google Drive
-        if: steps.pages.outputs.count != '0'
-        env:
-          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
-          GOOGLE_DRIVE_FOLDER_ID: ${{ secrets.GOOGLE_DRIVE_FOLDER_ID }}
-        run: python scripts/upload_drive.py "$PDF_PATH"
+      # SECURITY HOLD: Never inject Google service-account credentials into a
+      # workflow that executes repository-controlled code. The manual artifact
+      # stays available; re-enable Drive transfer only with short-lived OIDC
+      # and an isolated, reviewed uploader.
 
       - name: Archiver le PDF comme artifact GitHub
         if: steps.pages.outputs.count != '0'
@@ -59,7 +57,7 @@ jobs:
         with:
           name: regards-au-levant-pdf
           path: ${{ env.PDF_PATH }}
-          retention-days: 30
+          retention-days: 7
 
       - name: Enregistrer les nouveaux briefs
         run: |
